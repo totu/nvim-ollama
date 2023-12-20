@@ -172,10 +172,10 @@ function M.start_chat()
     end)
 end
 
-vim.api.nvim_create_user_command("Ollama", "lua require('ollama').start_chat()", {})
-vim.api.nvim_create_user_command("OllamaStop", "lua require('ollama').stop()", {})
-vim.api.nvim_create_user_command("OllamaHide", "lua require('ollama').hide()", {})
-vim.api.nvim_create_user_command("OllamaShow", "lua require('ollama').show()", {})
-vim.api.nvim_create_user_command("OllamaToggle", "lua require('ollama').toggle()", {})
+vim.api.nvim_create_user_command("Ollama", "lua require('nvim-ollama').start_chat()", {})
+vim.api.nvim_create_user_command("OllamaStop", "lua require('nvim-ollama').stop()", {})
+vim.api.nvim_create_user_command("OllamaHide", "lua require('nvim-ollama').hide()", {})
+vim.api.nvim_create_user_command("OllamaShow", "lua require('nvim-ollama').show()", {})
+vim.api.nvim_create_user_command("OllamaToggle", "lua require('nvim-ollama').toggle()", {})
 
 return M
