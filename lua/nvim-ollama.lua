@@ -92,6 +92,7 @@ function M.show()
         end
     })
 
+    vim.cmd("hi clear statuslinenc")
 
 end
 
