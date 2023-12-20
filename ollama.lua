@@ -5,6 +5,7 @@ M.ns = vim.api.nvim_create_namespace(M.model)
 M.curl = curl
 M.generated = ""
 M.width = 50
+M.context = {}
 
 if M.buf == nil then
     local buf = vim.api.nvim_create_buf(false, true)
@@ -17,7 +18,9 @@ end
 function M.nl()
     M.generated = ""
     vim.api.nvim_buf_set_lines(M.buf, -1, -1, true, { "" })
-    -- vim.api.nvim_win_set_cursor(M.win, { vim.api.nvim_buf_line_count(M.buf), 0 })
+    if M.win and M.win ~= nil and vim.api.nvim_win_is_valid(M.win) then
+        vim.api.nvim_win_set_cursor(M.win, { vim.api.nvim_buf_line_count(M.buf), 0 })
+    end
 end
 
 function M.stop()
@@ -32,7 +35,7 @@ function M.stop()
 end
 
 function M.hide()
-    if M.win then
+    if M.win and M.win ~= nil and vim.api.nvim_win_is_valid(M.win) then
         vim.api.nvim_win_hide(M.win)
     end
 end
@@ -71,6 +74,25 @@ function M.show()
         title_pos = "center",
     })
     M.win = win
+
+    -- Scroll to bottom on enter
+    vim.api.nvim_win_set_option(M.win, "scrolloff", 0)
+    vim.api.nvim_win_set_option(M.win, "sidescrolloff", 0)
+    vim.api.nvim_win_set_option(M.win, "wrap", true)
+    vim.api.nvim_win_set_option(M.win, "breakindent", true)
+    vim.api.nvim_win_set_option(M.win, "number", false)
+    vim.api.nvim_win_set_option(M.win, "relativenumber", false)
+
+    vim.api.nvim_create_autocmd("BufEnter", {
+        buffer = M.buf,
+        callback = function()
+            if M.win ~= nil and vim.api.nvim_win_is_valid(M.win) then
+                vim.api.nvim_win_set_cursor(M.win, { vim.api.nvim_buf_line_count(M.buf), 0 })
+            end
+        end
+    })
+
+
 end
 
 function M.start_chat()
@@ -84,11 +106,14 @@ function M.start_chat()
     --     end
     -- })
 
-    -- Draw the buffer
-    M.show()
 
     -- Main loop
     vim.ui.input({ prompt = ">>> " }, function(msg)
+        if msg == nil or msg == "" then
+            return
+        end
+        -- Draw the buffer
+        M.show()
         -- Prep the buffer
         local prompt_line = vim.api.nvim_buf_line_count(M.buf)
         if prompt_line == 1 then
@@ -100,10 +125,12 @@ function M.start_chat()
         vim.api.nvim_buf_set_lines(M.buf, prompt_line, -1, true, { ">>> " .. msg })
         vim.api.nvim_buf_add_highlight(M.buf, M.ns, "Function", prompt_line, 0, -1)
         vim.api.nvim_buf_set_lines(M.buf, -1, -1, true, { "" })
-        -- vim.api.nvim_win_set_cursor(M.win, { vim.api.nvim_buf_line_count(M.buf), 0 })
+        if M.win ~= nil and vim.api.nvim_win_is_valid(M.win) then
+            vim.api.nvim_win_set_cursor(M.win, { vim.api.nvim_buf_line_count(M.buf), 0 })
+        end
 
         --- Send the message to the server
-        local json = { model = M.model, prompt = msg }
+        local json = { model = M.model, prompt = msg, context = M.context }
         M.job = M.curl.post("localhost:11434/api/generate", {
             body = vim.fn.json_encode(json),
             stream = function(_, resp)
@@ -128,11 +155,15 @@ function M.start_chat()
                         end
 
                         if resp.done and M.buf then
+                            M.context = resp.context
                             vim.api.nvim_buf_set_lines(M.buf, -1, -1, true, { "" })
                             vim.api.nvim_buf_set_lines(M.buf, -1, -1, true, { ">>> DONE <<<" })
                             local last_line = vim.api.nvim_buf_line_count(M.buf)
                             vim.api.nvim_buf_add_highlight(M.buf, M.ns, "Comment", last_line - 1, 0, -1)
                             M.generated = ""
+                            if M.win ~= nil and vim.api.nvim_win_is_valid(M.win) then
+                                vim.api.nvim_win_set_cursor(M.win, { vim.api.nvim_buf_line_count(M.buf), 0 })
+                            end
                         end
                     end
                 end)
