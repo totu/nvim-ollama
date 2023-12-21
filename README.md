@@ -1,5 +1,6 @@
 # [Ollama.ai](https://ollama.ai) client for [NeoVIM](https://neovim.io)
 
+
 ## Dependencies
 
 1. Ollama server
@@ -10,6 +11,17 @@
 
 1. Run ollama on your machine
 2. call `:Ollama`
+
+## Installation
+
+Using [packer](https://github.com/wbthomason/packer.nvim):
+
+```lua
+use {
+    "totu/nvim-ollama",
+    requires = { { "nvim-lua/plenary.nvim" } }
+}
+```
 
 ## Configuration / Setup
 
